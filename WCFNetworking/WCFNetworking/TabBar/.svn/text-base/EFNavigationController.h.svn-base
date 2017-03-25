@@ -1,0 +1,14 @@
+//
+//  EFNavigationController.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface EFNavigationController : UINavigationController
+- (void)pushViewControllerRetro:(UIViewController *)viewController;
+- (void)popViewControllerRetro;
+@end

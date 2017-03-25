@@ -1,0 +1,15 @@
+//
+//  EFConst.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFConst.h"
+
+
+const int EFTimeCount = 60 ;
+const int EFPhoneNumber = 11 ;
+const int EFBackDelayTime = 0.8 ;
+const int EFAlertShowTime = 2.5 ;

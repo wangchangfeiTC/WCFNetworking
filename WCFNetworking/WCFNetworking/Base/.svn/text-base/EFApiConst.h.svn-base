@@ -1,0 +1,51 @@
+//
+//  EFApiConst.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+#pragma mark - 缓存文件夹
+
+UIKIT_EXTERN NSString *const folder_patient ;
+UIKIT_EXTERN NSString *const folder_consult ;
+UIKIT_EXTERN NSString *const folder_found ;
+UIKIT_EXTERN NSString *const folder_me ;
+
+UIKIT_EXTERN NSString *const EFUserBaseURL ;
+UIKIT_EXTERN NSString *const EFBaseURL ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

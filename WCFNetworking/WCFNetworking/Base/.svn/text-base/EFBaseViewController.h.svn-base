@@ -1,0 +1,118 @@
+//
+//  EFBaseViewController.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+#import "AppMacro.h"    
+#import "UtilsMacro.h"
+#import "UIView+Ext.h"
+#import "PublicUtils.h"
+#import "EFConst.h"
+#import "EFAppContext.h"
+
+typedef enum NoDataType{
+    NoDataTypeDefault ,/**/
+    NoDataTypeNoNet ,/*没有网络*/
+    NoDataTypeNoData/*没有数据*/
+}NoDataType;
+
+@interface EFBaseViewController : UIViewController
+
+
+/**
+ *  去掉 系统自带的 侧滑返回功能
+ */
+@property (nonatomic,assign)BOOL customerReturn ;
+
+/**
+ *  点击屏幕  退掉键盘
+ */
+- (void)bgViewTap;
+
+/*********没有数据提示********/
+@property (nonatomic,strong) UIView *dataFailTipView ;
+//展示没有数据的提醒
+- (void)showdataFailTipViewWithSuperView:(UIView *)superView type:(NoDataType)NoDataType target:(id)target action:(SEL)action msg:(NSString *)msg bottomInset:(CGFloat)bottomInset;
+//隐藏提示图片<直接移除>  在上面方法的action里面加上这句
+- (void)hidendataFailTipView;
+
+
+/***********返回**********/
+- (void)backWithDelay:(int)delayTime;
+- (void)onBackViewController:(id)sender;
+//子类实现此方法可以控制跳转到指定的界面
+- (void)returnVC;
+
+- (void)backRootVCWithDelay:(int)delayTime ;
+- (void)returnRootVC ;
+- (void)dismissVC ;
+
+//右上角按钮
+- (void)setRightBarButtonWithIcon:(NSString *)icon title:(NSString *)title ;
+- (void)rightBtnClick ;
+
+/***********返回**********/
+
+- (void)initNavbar;
+- (void)initModel;
+- (void)initView;
+- (void)initNibDefault; //从nib过来一些基本设置
+
+- (void)addNotification;
+- (void)removeNotification;
+
+
+- (void)handleModelError:(id)sender error:(NSError*)error;
+
+
+// hud functions
+- (void)showHUD;
+- (void)showHUDWithLabel:(NSString *)msg;
+- (void)hideHUD;
+- (void)hideHUDAfterDelay:(float)delay;
+- (void)showHUDInWidownWithMsg:(NSString *)msg;
+- (void)showHUDInView:(UIView *)view msg:(NSString *)msg ;
+
+/**
+ *  itoast functions
+ */
+- (void)showToast:(NSString*)msg;
+
+/**
+ *  自动消失提示框
+ */
+- (void)showAlert:(NSString *)alert timeSpan:(int)timeSpan;
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,62 @@
+//
+//  EFApiClient.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFApiClient.h"
+#import <Reachability.h>
+#import "AppMacro.h"
+#import "EFApiConst.h"
+
+@implementation EFApiClient
+
++ (instancetype)sharedUClient
+{
+    static EFApiClient *_sharedUClient = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        
+        AFSecurityPolicy* policy = [[AFSecurityPolicy alloc] init];
+        [policy setAllowInvalidCertificates:YES];
+        _sharedUClient = [[EFApiClient alloc] initWithBaseURL:[NSURL URLWithString:EFUserBaseURL]];
+        [_sharedUClient setSecurityPolicy:policy];
+        _sharedUClient.requestSerializer = [AFHTTPRequestSerializer serializer];
+        _sharedUClient.responseSerializer = [AFJSONResponseSerializer serializer];
+        _sharedUClient.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/x-javascript",@"application/json", @"text/json", @"text/html", nil];
+    });
+    return _sharedUClient;
+}
+
++ (instancetype)sharedMClient
+{
+    static EFApiClient *_sharedMClient = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        
+        AFSecurityPolicy* policy = [[AFSecurityPolicy alloc] init];
+        [policy setAllowInvalidCertificates:YES];
+        _sharedMClient = [[EFApiClient alloc] initWithBaseURL:[NSURL URLWithString:EFBaseURL]];
+        [_sharedMClient setSecurityPolicy:policy];
+        _sharedMClient.requestSerializer = [AFHTTPRequestSerializer serializer];
+        _sharedMClient.responseSerializer = [AFHTTPResponseSerializer serializer];
+        
+        _sharedMClient.responseSerializer = [AFJSONResponseSerializer serializer];
+        _sharedMClient.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/x-javascript",@"application/json", @"text/json", @"text/html", nil];
+    });
+    return _sharedMClient;
+}
+
+- (BOOL)isNetworkAvailable
+{
+    Reachability* newtorkReachbility = [Reachability reachabilityForInternetConnection];
+    NetworkStatus networkStatus = [newtorkReachbility currentReachabilityStatus];
+    if (networkStatus == NotReachable) {
+        return NO;
+    }
+    return YES;
+}
+
+@end

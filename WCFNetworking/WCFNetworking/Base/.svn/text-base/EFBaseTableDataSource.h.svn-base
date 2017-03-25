@@ -1,0 +1,56 @@
+//
+//  EFBaseTableDataSource.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+#import "EFBaseViewController.h"
+
+@interface EFBaseTableDataSource : NSObject<UITableViewDataSource,UITableViewDelegate>
+
+@property (nonatomic,weak)EFBaseViewController *controller ;
+@property (atomic,strong)NSMutableArray *dataArray ;
+
+@property (nonatomic,assign)int pageSize ;
+@property (nonatomic,assign)int pageNo ;
+
+- (id)initWithController:(EFBaseViewController *)controller ;
+
+- (int)count ;
+//- (BOOL)isHasMoreData ;
+- (void)addDataArray:(NSArray *)array ;
+- (void)insertObject:(id)object atIndex:(NSUInteger)index ;
+- (void)clearData ;
+- (void)removeObjectAtIndex:(NSUInteger)index ;
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

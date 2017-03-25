@@ -1,0 +1,20 @@
+//
+//  EFTabBarController.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+#import "EFTabBar.h"
+
+@interface EFTabBarController : UITabBarController
+
+@property (nonatomic,strong,readonly)EFTabBar *groubeTabbar ;
+@property (nonatomic,assign,readonly)NSInteger currentSelectIndex ;
+//选中第几个控制器
+- (void)showViewControllerWithTag:(int)tag;
+
+@end

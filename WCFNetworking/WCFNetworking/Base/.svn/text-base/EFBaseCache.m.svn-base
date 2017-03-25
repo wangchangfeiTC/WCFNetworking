@@ -1,0 +1,294 @@
+//
+//  EFBaseCache.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+
+#import "EFBaseCache.h"
+
+#import <CommonCrypto/CommonDigest.h>
+#import <SDWebImage/SDImageCache.h>
+
+static NSTimeInterval aloneCacheTime = (double)604800 ;
+
+@implementation EFBaseCache
+
+
+- (NSUInteger)checkTmpSize
+{
+    NSUInteger s =  [[SDImageCache sharedImageCache] getSize];
+    //    [[SDImageCache sharedImageCache]clearMemory];
+    return s ;
+}
+
+- (id)init
+{
+    if (self = [super init]) {
+        self.fileUpdateRate = fileNeverUpdate ;
+        self.fileNameNeedMD5Flag = NO ;
+    }
+    return self ;
+}
+
+// 生成文件夹全路径
+- (NSString *)generateFolderPath
+{
+    return [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0] stringByAppendingPathComponent:self.folderName];
+}
+
+// 创建文件夹
+- (void)createFolder
+{
+    if (NO == [self fileExistsAtPath:[self generateFolderPath]]) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:[self generateFolderPath]
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:NULL];
+    }
+}
+
+// 生成文件全全路径
+- (NSString *)generateFilePath:(NSString *)fileName
+{
+    if (nil == fileName) return nil ;
+    
+    [self createFolder];
+    if (self.fileNameNeedMD5Flag) {
+        self.fileName = [self md5HexDigest:fileName];
+    }else{
+        self.fileName = fileName ;
+    }
+    
+    self.filePath = [[self generateFolderPath]stringByAppendingPathComponent:self.fileName];
+    return self.filePath;
+}
+
+// 判断文件是否存在
+- (BOOL)fileExistsAtPath:(NSString *)path
+{
+    if (nil == path) return NO ;
+    return [[NSFileManager defaultManager]fileExistsAtPath:path];
+}
+
+//创建文件
+- (BOOL)createFileByName:(NSString *)fileName fileData:(NSData *)data
+{
+    if (nil == data || nil == fileName) return NO ;
+    [self deleteFileByName:fileName];
+    BOOL f = [[NSFileManager defaultManager] createFileAtPath:fileName
+                                                     contents:data
+                                                   attributes:nil];
+    return f ;
+}
+
+//删除文件
+- (void)deleteFileByName:(NSString *)path
+{
+    if ([self fileExistsAtPath:self.filePath]) {
+        NSError *error ;
+        [[NSFileManager defaultManager] removeItemAtPath:self.filePath error:&error];
+    }
+}
+
+
+//文件至今多少天
+- (NSInteger)dateEarlierNow:(NSString *)fileName
+{
+    if (nil == fileName) return 0    ;
+    if ([self fileExistsAtPath:fileName] == NO) return 0 ;
+    
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:fileName error:nil];
+    if (fileAttributes) {
+        NSDate *createDate = (NSDate *)[fileAttributes objectForKey:NSFileCreationDate];
+        if (nil == createDate)  return 0 ;
+        
+        NSDate *today = [NSDate date ];
+        NSTimeInterval interVal = [today timeIntervalSinceDate:createDate];
+        //转换为天数
+        NSInteger day = (NSInteger)((int)interVal/86400);
+        return day ;
+    }else{
+        return 0 ;
+    }
+}
+
+//文件是否是在前一天或是前多少天缓存的
+- (BOOL)fileIsBeforeDayCache
+{
+    if (nil == self.filePath ) return NO ;
+    if ([self fileExistsAtPath:self.filePath] == NO) return NO ;
+    
+    NSDictionary *fileAtt = [[NSFileManager defaultManager] attributesOfItemAtPath:self.filePath error:nil];
+    if (fileAtt) {
+        NSDate *createDate = (NSDate *)[fileAtt objectForKey:NSFileModificationDate];
+        if (nil == createDate) return NO ;
+        
+        NSDateFormatter *format1 = [[NSDateFormatter alloc]init];
+        [format1 setDateFormat:@"yyyy-MM-dd"];
+        NSString *s1 = [format1 stringFromDate:createDate];
+        
+        NSDate *today = [NSDate date];
+        NSDateFormatter *format2 = [[NSDateFormatter alloc]init];
+        [format2 setDateFormat:@"yyyy-MM-dd"];
+        NSString *s2 = [format2 stringFromDate:today];
+        
+        //当前日期和存储文件日期一样 不需要跟新
+        if ([s1 isEqualToString:s2])  return NO ;
+    }
+    
+    return YES ;
+}
+// MD5加密
+- (NSString *)md5HexDigest:(NSString *)fileName{
+    if (nil == fileName) return nil;
+    
+    const char *original_str = [fileName UTF8String];
+    unsigned char result[CC_MD5_DIGEST_LENGTH];
+    CC_MD5(original_str, (CC_LONG)strlen(original_str), result);
+    NSMutableString *hash = [NSMutableString string];
+    for (int i = 0; i < 16; i++)
+        [hash appendFormat:@"%02X", result[i]];
+    return [hash lowercaseString];
+}
+
+// 文件更新策略方法
+- (BOOL)updateFileWithRateUnit
+{
+    // 本地都不存在，需要马上更新
+    if ([self fileExistsAtPath:self.filePath] == NO)  return YES ;
+    
+    //到这里说明本地已有一份cache
+    if (self.fileUpdateRate == fileNeverUpdate)  return NO ;
+    
+    if (self.fileUpdateRate == fileOnceUpdate) return NO ;
+    
+    if (self.fileUpdateRate == fileEveryUpdate) return YES ;
+    
+    //判断是否是同一天存在的缓存
+    if (self.fileUpdateRate == fileEveryDayUpdate) {
+        return [self fileIsBeforeDayCache];
+    }
+    
+    //获取当前文件至今的日子
+    NSInteger days = [self dateEarlierNow:self.filePath];
+    
+    if (days>=1 && self.fileUpdateRate==fileOnedayUpdate) return YES ;
+    if (days>=3 && self.fileUpdateRate==fileThreedayUpdate ) return YES;
+    if (days>=7 && self.fileUpdateRate==fileWeekUpdate) return YES;
+    if (days>=30&& self.fileUpdateRate==fileMonthUpdate) return YES;
+    
+    return NO;
+}
+
+//单个文件的大小
+- (long long) fileSizeAtPath:(NSString*) filePath
+{
+    NSFileManager* manager = [NSFileManager defaultManager];
+    if ([manager fileExistsAtPath:filePath]){
+        return [[manager attributesOfItemAtPath:filePath error:nil] fileSize];
+    }
+    return 0;
+}
+
+//遍历文件夹获得文件夹大小，返回多少M
+- (float ) folderSizeAtPath:(NSString*) folderPath{
+    NSFileManager* manager = [NSFileManager defaultManager];
+    if (![manager fileExistsAtPath:folderPath]) return 0;
+    NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];
+    NSString* fileName;
+    long long folderSize = 0;
+    while ((fileName = [childFilesEnumerator nextObject]) != nil){
+        NSString* fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
+        folderSize += [self fileSizeAtPath:fileAbsolutePath];
+    }
+    return folderSize/(1024.0*1024.0);
+}
+
+
+- (NSString *)getCacheSize
+{
+    return [NSString stringWithFormat:@"%0.2fMB",[self folderSizeAtPath:[self generateFolderPath]]] ;
+}
+
+- (void)cleanCache
+{
+    [[NSFileManager defaultManager] removeItemAtPath:[self generateFolderPath] error:nil];
+}
+
+#pragma mark - 单独缓存操作
++ (void)aloneCacheReset
+{
+    [[NSFileManager defaultManager] removeItemAtPath:[EFBaseCache aloneCacheDirectory] error:nil];
+    
+}
++ (NSString *)aloneCacheDirectory
+{
+    NSString  *path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    [path stringByAppendingPathComponent:@"aloneCache"];
+    
+    return path;
+}
+
++ (id)aloneCacheObjectForKey:(NSString *)key
+{
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *fileName = [self.aloneCacheDirectory stringByAppendingPathComponent:key];
+    if ([fileManager fileExistsAtPath:fileName]) {
+        NSDate *modificationDate = [[fileManager attributesOfItemAtPath:fileName error:nil] objectForKey:NSFileModificationDate];
+        if ([modificationDate timeIntervalSinceNow] > aloneCacheTime) {
+            [fileManager removeItemAtPath:fileName error:nil];
+        }else{
+            return [NSData dataWithContentsOfFile:fileName];
+        }
+    }
+    return nil;
+}
+
++ (void)aloneCacheData:(NSData *)data forKey:(NSString *)key
+{
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *fileName = [self.aloneCacheDirectory stringByAppendingPathComponent:key];
+    
+    BOOL isDir = YES ;
+    if (![fileManager fileExistsAtPath:self.aloneCacheDirectory isDirectory:&isDir]) {
+        [fileManager createDirectoryAtPath:self.aloneCacheDirectory withIntermediateDirectories:NO attributes:nil error:nil];
+    }
+    
+    NSError *error ;
+    @try {
+        [data writeToFile:fileName options:NSDataWritingAtomic error:&error];
+    }@catch (NSException *exception) {
+        //统计
+    }
+    
+}
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,19 @@
+//
+//  EFApiClient.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "AFHTTPRequestOperationManager.h"
+
+@interface EFApiClient : AFHTTPRequestOperationManager
+
+//  nf1000.com 接口
++ (instancetype)sharedUClient;
++ (instancetype)sharedMClient;
+
+- (BOOL)isNetworkAvailable;//  网络是否可见
+
+@end

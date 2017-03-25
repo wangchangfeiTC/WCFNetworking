@@ -1,0 +1,27 @@
+//
+//  EFTabBar.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+#define kTabBarBtnTag  100
+
+@class EFTabBar ;
+@protocol EFTabBarDelegate <NSObject>
+
+@optional
+- (void)tabBar:(EFTabBar *)tabBar didSelectButtonFrom:(NSUInteger)from to:(NSUInteger)to;
+@end
+
+
+@interface EFTabBar : UIView
+@property (nonatomic,weak)id<EFTabBarDelegate> delegate ;
+@property (nonatomic,assign)int selectIndex ;//选中第几个按钮
+@property (nonatomic,assign,readonly)NSInteger currentSelectIndex ;//目前选中的按钮
+
+- (void)addTabBarButton:(NSString *)icon selIcon:(NSString *)selIcon  title:(NSString *)title index:(int)index;
+@end

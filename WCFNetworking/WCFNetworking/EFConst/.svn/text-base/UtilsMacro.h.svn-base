@@ -1,0 +1,30 @@
+//
+//  UtilsMacro.h
+//  EFHealth
+//
+//  Created by liumadu on 14-11-28.
+//  Copyright (c) 2014年 ef. All rights reserved.
+//
+
+#ifndef HHMusic_UtilsMacro_h
+#define HHMusic_UtilsMacro_h
+
+//int类型转换为 NSString
+#define NSStringFromInt(intValue) [NSString stringWithFormat:@"%d", intValue]
+// float类型转化为 NSString
+#define NSStringFromFloat(floatValue) [NSString stringWithFormat:@"%f", floatValue]
+
+#define IsKindOfClass(_x, _class) ([_x isKindOfClass:[_class class]])
+//  _c 是否有_m 方法
+#define RespondsToSelector(_c, _m) ([_c respondsToSelector:_m])
+// 是否为空
+#define ISEMPTY(_v) (_v == nil || _v.length == 0)
+#define ISNull(_x)   ([_x isKindOfClass:[NSNull class]] || _x == nil)
+
+//一个字符串是否与另一个相同
+#define ISEqual(item1 , item2) [item1 isEqualToString:item2]
+
+#define HAVECONTROLLER(value) if(value == nil || value.controller == nil){return;}
+#define ARRAY_VALUE(value) (value != nil && [value count] > 0)
+
+#endif

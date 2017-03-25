@@ -1,0 +1,21 @@
+//
+//  EFBaseModelHandler.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+#import "EFBaseModel.h"
+#import "BaseResponse.h"
+#import "EFBaseViewController.h"
+
+@interface EFBaseModelHandler : NSObject<EFBaseModelDelegate>
+
+@property (nonatomic, weak) EFBaseViewController *controller;
+
+- (id)initWithController:(EFBaseViewController *)controller;
+
+@end

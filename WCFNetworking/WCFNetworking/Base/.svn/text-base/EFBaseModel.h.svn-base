@@ -1,0 +1,134 @@
+//
+//  EFBaseModel.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+//所有 网络数据请求的基类
+//
+
+#import "EFBaseCache.h"
+
+#import <Foundation/Foundation.h>
+
+#import "EFApiClient.h"
+#import "EFApiConst.h"
+#import "EFAppContext.h"
+#import "AppMacro.h"
+#import "UtilsMacro.h"
+#import "UIView+Ext.h"
+#import "PublicUtils.h"
+
+@class BaseResponse ;
+
+@protocol EFBaseModelDelegate <NSObject>
+
+@required
+/**
+ *  加载数据成功，返回正确
+ */
+- (void)dataDidLoad:(id)sender data:(BaseResponse*)data;
+/**
+ *  网络异常
+ */
+- (void)netError:(id)sender error:(NSError*)error;
+/**
+ *  正常返回数据，解析失败
+ */
+- (void)parseError:(id)sender error:(NSError*)error;
+/**
+ *  正常返回数据，解析成功，服务端status非0
+ */
+- (void)resultError:(id)sender data:(BaseResponse *)data;
+
+@end
+
+@interface EFBaseModel : EFBaseCache
+
+//是否有网络
+@property (nonatomic,assign)BOOL isNetworkAvailable ;
+/**
+ *  代理
+ */
+@property (nonatomic, readonly, weak) id<EFBaseModelDelegate> delegate;
+
+/**
+ *  创建方式
+ */
+- (id)initWithHandler:(id<EFBaseModelDelegate>)delegate;
+/**
+ *  取消请求
+ */
+//-(void)cancelGetMRequest;
+/**
+ *  访问 user的接口
+ */
+- (void)getUPath:(NSString *)path parameters:(NSDictionary *)parameters;
+
+/**
+ *  post 上传图片
+ */
+- (void)uploadImage:(NSString*)path parameters:(NSDictionary*)parameters image:(UIImage*)image imageName:(NSString*)imageName;
+/**
+ *  数据下载成功 控制器实现这个方法 （如果没有实现就会调用）
+ */
+- (BaseResponse*)parseResponse:(NSDictionary*)responseDict error:(NSError**)error;
+
+
+/**
+ *  访问 mbank借口
+ */
+- (void)getMPath:(NSString*)path parameters:(NSDictionary*)parameters;
+/**
+ *  数据缓存 访问 mbank 接口
+ *
+ *  @param path    URL
+ *  @param parameters url后带的参数
+ *  @param forderName 保存到本地 文件夹名
+ *  @param fileName 保存 文件名
+ *  @param FileUpdateRate 更新策略 <最好是每次都跟新><网络下载失败的时候直接读缓存>
+ */
+- (void)getMPath:(NSString*)path
+      parameters:(NSDictionary*)parameters
+      forderName:(NSString *)forderName
+        fileName:(NSString *)fileName
+  fileUpdateRate:(FileUpdateRate)FileUpdateRate ;
+
+
+/**
+ *  访问 mbank接口
+ */
+- (void)postMPath:(NSString*)path parameters:(NSDictionary*)parameters;
+/**
+ *  访问 mbank接口 <<带缓存>>
+ */
+- (void)postMPath:(NSString*)path
+       parameters:(NSDictionary*)parameters
+       forderName:(NSString *)forderName
+         fileName:(NSString *)fileName
+   fileUpdateRate:(FileUpdateRate)FileUpdateRate ;
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

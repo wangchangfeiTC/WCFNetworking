@@ -1,0 +1,17 @@
+//
+//  EFApiConst.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFApiConst.h"
+
+NSString *const folder_patient = @"folder_patient";
+NSString *const folder_consult = @"folder_consult";
+NSString *const folder_found = @"folder_found" ;
+NSString *const folder_me = @"folder_me";
+
+NSString *const EFUserBaseURL = @"http://test.user.nf1000.com";
+NSString *const EFBaseURL = @"http://test.mbank.nf1000.com";

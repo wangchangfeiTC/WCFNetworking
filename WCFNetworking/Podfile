@@ -1,0 +1,15 @@
+
+platform :ios, '7.0'
+
+
+
+target 'WCFNetworking' do
+    
+    pod 'SDWebImage', '~> 3.8.1’
+    pod 'MBProgressHUD', '~> 0.9'
+    pod 'JSONModel', '~> 1.4.0'
+    pod 'Reachability', '~> 3.2'
+    pod 'MJRefresh', '~> 3.1.12'
+    pod 'hpple', '~> 0.2.0'
+    
+end

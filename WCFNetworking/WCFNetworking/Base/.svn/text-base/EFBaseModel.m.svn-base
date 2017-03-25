@@ -1,0 +1,426 @@
+//
+//  EFBaseModel.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFBaseModel.h"
+
+#import "NSDictionary+Ext.h"
+#import "NSString+Ext.h"
+#import "BaseResponse.h"
+
+typedef  void (^SuccessBlock)(AFHTTPRequestOperation *operation, id responseObject);
+typedef  void (^FailureBlock)(AFHTTPRequestOperation *operation, NSError *error);
+
+@interface EFBaseModel()
+{
+    //    AFHTTPRequestOperation *_operation ;
+}
+
+@property (nonatomic,strong)NSString *urlPath ;         //接口路径
+@property (nonatomic,strong)NSDictionary *urlDictionary;//接口参数
+@property (nonatomic,assign)BOOL isPostRequest ;        //是否为post请求
+@end
+
+@implementation EFBaseModel
+
+//控制器直接可成为其代理
+- (id)initWithController:(UIViewController<EFBaseModelDelegate>*)delegate
+{
+    if ([super init]){
+        _delegate = delegate;
+        self.isPostRequest = NO ;
+    }
+    
+    return self;
+}
+//继承自它的成为其代理
+- (id)initWithHandler:(id<EFBaseModelDelegate>)delegate
+{
+    if (self = [super init]){
+        _delegate = delegate;
+        self.isPostRequest = NO ;
+    }
+    return self;
+}
+
+//url中公共参数<mbank中用>
+- (NSDictionary*)getCommonParameters
+{
+    NSMutableDictionary *commonParameters = [NSMutableDictionary dictionaryWithCapacity:5];
+    //    NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
+    //    NSString *appVersion = [infoDictionary objectForKey:@"CFBundleShortVersionString"];
+    //    [commonParameters setValue:appVersion forKey:@"appversion"];
+    //    [commonParameters setValue:[EFUserDefaults objectForKey:UserName] forKey:@"userid"];
+    [commonParameters setValue:@"1.5" forKey:@"version"];
+    [commonParameters setValue:@"ios" forKey:@"platform"];
+    return commonParameters;
+}
+//url中公共参数<user中用>
+- (NSDictionary *)getUserCommonParameters
+{
+    NSMutableDictionary *commonParameters = [NSMutableDictionary dictionaryWithCapacity:5];
+    [commonParameters setValue:@"1.5" forKey:@"version"];
+    [commonParameters setValue:@"ios" forKey:@"platform"];
+    return commonParameters;
+}
+
+//全局单例 数据下载接口头部<user不需要cookie参数，所以user接口不需要它>
+- (EFApiClient *)getClient
+{
+    EFApiClient* client = [EFApiClient sharedMClient];
+    EFAppContext *appContext = [EFAppContext sharedContext];
+    NSString *cookie = [NSString stringWithFormat:@"NF_USER_INFO=%@;%@",appContext.NF_USER_INFO,appContext.NF_USER_SESSION];
+    [client.requestSerializer setValue:cookie forHTTPHeaderField:@"cookie"];
+    return client;
+}
+
+#pragma mark - 访问 user接口 <<登录，注销登录>>
+- (void)getUPath:(NSString *)path parameters:(NSDictionary *)parameters
+{
+    
+    EFApiClient *client = [EFApiClient sharedUClient];
+    EFAppContext *appContext = [EFAppContext sharedContext];
+    NSString *cookie = [NSString stringWithFormat:@"NF_USER_INFO=%@;%@",appContext.NF_USER_INFO,appContext.NF_USER_SESSION];
+    [client.requestSerializer setValue:cookie forHTTPHeaderField:@"cookie"];
+    
+    
+    if (![client isNetworkAvailable]) {
+        [self.delegate netError:self error:nil]; return;
+    }
+    
+    NSString *commonParameters = [[self getUserCommonParameters] urlEncodedString];
+    NSString *newPath = [path URLStringByAppendingQueryString:commonParameters];
+    __weak __typeof(self) weakSelf = self;
+    [client GET:newPath parameters:parameters
+        success:[self getSuccessBlock:weakSelf]
+        failure:[self getFailureBlock:weakSelf]
+     ];
+}
+//-(void)cancelGetMRequest
+//{
+//    [_operation cancel];
+//}
+
+#pragma mark - 上传图片 （post方式）
+- (void)uploadImage:(NSString*)path parameters:(NSDictionary*)parameters image:(UIImage*)image imageName:(NSString*)imageName
+{
+    EFApiClient *client = [self getClient];
+    if (![client isNetworkAvailable]) {
+        [self.delegate netError:self error:nil];
+        return;
+    }
+    NSString* commonParameters = [[self getCommonParameters] urlEncodedString];
+    NSString* newPath = [path URLStringByAppendingQueryString:commonParameters];
+    NSData* imageData = UIImageJPEGRepresentation(image, 0.5);
+    
+    __weak __typeof(self) weakSelf = self;
+    [client POST:newPath parameters:parameters constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
+        [formData appendPartWithFileData:imageData name:@"image" fileName:imageName mimeType:@"image/jpeg"];
+    }
+         success:[self getSuccessBlock:weakSelf]
+         failure:[self getFailureBlock:weakSelf]
+     ];
+}
+
+
+#pragma mark - 访问 mBank接口 （post方式）
+- (void)postMPath:(NSString *)path parameters:(NSDictionary *)parameters
+{
+    EFApiClient *client = [self getClient];
+    if (![client isNetworkAvailable]) {
+        [self.delegate netError:self error:nil];
+        [self findFileInLocation];
+        return;
+    }
+    
+    NSString *commonParameters = [[self getCommonParameters] urlEncodedString];
+    NSString *newPath = [path URLStringByAppendingQueryString:commonParameters];
+    
+    __weak __typeof(self) weakSelf = self;
+    [client POST:newPath parameters:parameters
+         success:[self getSuccessBlock:weakSelf]
+         failure:[self getFailureBlock:weakSelf]
+     ];
+}
+- (void)postMPath:(NSString*)path parameters:(NSDictionary*)parameters forderName:(NSString *)forderName fileName:(NSString *)fileName fileUpdateRate:(FileUpdateRate)FileUpdateRate
+{
+    self.fileUpdateRate = FileUpdateRate ;
+    self.fileName = fileName ;
+    self.folderName = forderName ;
+    self.filePath = [self generateFilePath:self.fileName];
+    
+    self.urlPath = path ;
+    self.urlDictionary = parameters ;
+    
+    if ([self updateFileWithRateUnit]) {
+        [self postMPath:path parameters:parameters];
+    }else{
+        [self findFileInLocation];
+    }
+}
+
+#pragma mark - 访问 mBank接口 （get方式）
+- (void)getMPath:(NSString*)path parameters:(NSDictionary*)parameters
+{
+    EFApiClient *client = [self getClient];
+    if (![client isNetworkAvailable]) {
+        [self.delegate netError:self error:nil];
+        [self findFileInLocation];
+        return ;
+    }
+    [client.operationQueue cancelAllOperations];//取消请求
+    NSString *commonParameters = [[self getCommonParameters] urlEncodedString];
+    NSString *newPath = [path URLStringByAppendingQueryString:commonParameters];
+    __weak __typeof(self) weakSelf = self;
+    //#warning ==get==地址打印====
+    /*_operation = */[client GET:newPath parameters:parameters
+                         success:[self getSuccessBlock:weakSelf]
+                         failure:[self getFailureBlock:weakSelf]
+                      ];
+}
+
+- (void)getMPath:(NSString *)path parameters:(NSDictionary *)parameters forderName:(NSString *)forderName fileName:(NSString *)fileName fileUpdateRate:(FileUpdateRate)fileUpdateRate
+{
+    //缓存参数
+    self.fileUpdateRate = fileUpdateRate ;
+    self.fileName = fileName ;
+    self.folderName = forderName ;
+    self.filePath = [self generateFilePath:self.fileName];
+    
+    //缓存用到的接口参数
+    self.urlPath = path ;
+    self.urlDictionary = parameters ;
+    
+    //判断是否需要发出请求
+    if ([self updateFileWithRateUnit]) {//需要更新
+        //更新接口
+        [self getMPath:path parameters:parameters];
+    }else{//不需要更新，直接可以从本地读取数据
+        //去本地找数据
+        [self findFileInLocation];
+    }
+}
+
+// 找本地的文件，找到直接解析数据通知代理，否则下载数据
+- (void)findFileInLocation
+{
+    if ([self fileExistsAtPath:self.filePath]) {
+        NSData *fileData = [[NSData alloc]initWithContentsOfFile:self.filePath];
+        NSError *err;
+        NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:fileData options:NSJSONReadingMutableLeaves error:&err];
+        //当上一次下载的数据是假数据的时候，同样应该去请求数据
+        if ([dic objectForKey:@"code"] == 0) {
+            [self locationNoDataStartNetWork];
+        }else{
+            [self parseResponseWithObject:dic];
+        }
+    }else{
+        [self locationNoDataStartNetWork];
+    }
+}
+#pragma mark - 网络请求数据
+- (void)locationNoDataStartNetWork
+{
+    EFApiClient* client = [EFApiClient sharedMClient];
+    if ([client isNetworkAvailable]) {
+        if (self.isPostRequest) {
+            [self postMPath:self.urlPath parameters:self.urlDictionary];
+        }else{
+            [self getMPath:self.urlPath parameters:self.urlDictionary];
+        }
+    }
+}
+#pragma mark - success  网络成功回调接口
+- (SuccessBlock)getSuccessBlock:(EFBaseModel *)weakSelf
+{
+    return ^(AFHTTPRequestOperation *operation, id responseObject) {
+# warning ----下载数据打印-------
+        //1，获得cookies 登录信息保存在里面
+        NSString *cookies = operation.response.allHeaderFields[@"Set-Cookie"];
+        NSString *url = [NSString stringWithFormat:@"%@",operation.response.URL];
+        if (([url rangeOfString:@"http://mbank.nf1000.com"].location != NSNotFound)&&!ISEMPTY(cookies)) {
+            EFAppContext *appContext = [EFAppContext sharedContext];
+            if (![cookies isEqualToString:appContext.NF_USER_SESSION]) {
+                appContext.NF_USER_SESSION = cookies;
+                [appContext save];
+            }
+        }
+        
+        //2，数据保存到本地<当路径和数据有一个为空，内部就不会去保存它>
+        [self createFileByName:self.filePath fileData:operation.responseData];
+        
+        //3，解析数据
+        [self parseResponseWithObject:responseObject];
+    };
+}
+
+#pragma mark - 数据解析
+- (void)parseResponseWithObject:(id)responseObject
+{
+    
+    BOOL b = [[NSUserDefaults standardUserDefaults] boolForKey:@"online_offline__"];
+    
+    __weak __typeof(self) weakSelf = self;
+    if ([responseObject isKindOfClass:[NSDictionary class]]) {
+        NSDictionary* responseDict = (NSDictionary*)responseObject;
+        NSError* error = nil;
+        BaseResponse* responseModel = nil;
+        
+        @try {
+            responseModel = [weakSelf parseResponse:responseDict error:&error];
+        }@catch (NSException *exception) {
+            
+            //            NSLog(@"数据解析出错 error:%@", exception);
+            
+            if (b)[self showAlert:[NSString stringWithFormat:@"%@",exception] timeSpan:5];
+        }
+        
+        if (nil == responseModel || error) {
+            responseModel = [[BaseResponse alloc] initWithDictionary:responseDict error:&error];
+            if (nil != responseModel && 0 != responseModel.code) {
+                
+                //                 NSLog(@"result error:%@", responseModel);
+                if (b)[self showAlert:error.description timeSpan:5];
+                
+                [weakSelf.delegate resultError:weakSelf data:responseModel];
+                
+                //当没有登录的时候，应该清除本地缓存，防止一直跳登录界面
+                if ([responseModel.msg isEqualToString:@"未登录"]) {
+                    [self cleanCache];//改成删除对应路径缓存
+                }
+                
+            } else {
+                //                NSLog(@"parse failed:%@", error);
+                
+                if (b)[self showAlert:error.description timeSpan:5];
+                
+                [weakSelf.delegate parseError:weakSelf error:error];
+            }
+        } else {
+            if (responseModel.success) {
+                [weakSelf.delegate dataDidLoad:weakSelf data:responseModel];
+            } else {
+                //                NSLog(@"result error:%@", responseModel);
+                
+                if (b)[self showAlert:error.description timeSpan:5];
+                
+                [weakSelf.delegate resultError:weakSelf data:responseModel];
+            }
+        }
+    } else {
+        [weakSelf.delegate netError:weakSelf error:nil];
+        
+        if (b)[self showAlert:@"后台返回的不是一个字典格式！" timeSpan:5];
+    }
+    
+}
+
+#pragma mark - 网络失败
+- (FailureBlock)getFailureBlock:(EFBaseModel *)weakSelf
+{
+    return ^(AFHTTPRequestOperation *operation, NSError *error) {
+        
+        
+        if (![operation isCancelled]) {
+            [weakSelf.delegate netError:weakSelf error:error];
+            
+            NSLog(@"网络错误：%@",error);
+            
+            BOOL b = [EFUserDefaults boolForKey:@"online_offline__"];
+            if (b) [self showAlert:error.description timeSpan:6];
+        }else{
+            
+            NSLog(@"==========取消请求=====");
+            
+        }
+    };
+}
+
+//当子类没有实现解析数据方法时调用
+- (BaseResponse*)parseResponse:(NSDictionary*)responseDict error:(NSError**)error
+{
+    return [[BaseResponse alloc] initWithDictionary:responseDict error:error];
+}
+
+- (BOOL)isNetworkAvailable
+{
+    return [[EFApiClient sharedMClient] isNetworkAvailable];
+}
+
+
+//AFHTTPRequestOperationManager 将通用的与服务器应用交互的操作封装了起来，包括了请求的创建，回复的序列化，网络指示器的监测，安全性，当然还有请求操作的管理。
+
+
+
+
+- (void)showAlert:(NSString *)alert timeSpan:(int)timeSpan
+{
+    if (ISEMPTY(alert)) return ;
+    
+    UILabel *remind = [[UILabel alloc] init];
+    remind.numberOfLines = 0;
+    remind.backgroundColor = [UIColor blackColor];
+    remind.text = alert;
+    remind.textColor = [UIColor whiteColor];
+    remind.textAlignment = NSTextAlignmentCenter;
+    remind.font = [UIFont boldSystemFontOfSize:10];
+    remind.frame = CGRectMake(0, 0, 180, 300);
+    remind.layer.cornerRadius = 5;
+    remind.layer.masksToBounds = YES;
+    [remind sizeToFit];
+    
+    CGRect rect = remind.frame;
+    rect.size.width += 60;
+    rect.size.height += 30;
+    remind.frame = rect;
+    remind.center = CGPointMake(SCREEN_WIDTH/2.0, SCREEN_HEIGHT/2);
+    
+    [UIView animateWithDuration:timeSpan animations:^{
+        remind.alpha = 0.7;
+    } completion:^(BOOL finished){
+        [remind removeFromSuperview];
+    }];
+    
+    [[UIApplication sharedApplication].keyWindow addSubview:remind];
+    
+}
+
+
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

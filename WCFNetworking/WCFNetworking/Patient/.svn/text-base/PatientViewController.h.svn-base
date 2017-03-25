@@ -1,0 +1,13 @@
+//
+//  PatientViewController.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFBaseViewController.h"
+
+@interface PatientViewController : EFBaseViewController
+
+@end

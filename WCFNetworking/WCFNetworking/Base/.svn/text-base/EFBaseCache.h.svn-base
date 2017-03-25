@@ -1,0 +1,132 @@
+//
+//  EFBaseCache.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+// cache基础类，包含文件的各种操作，以及文件的更新策略
+//
+
+
+#import <Foundation/Foundation.h>
+
+/****文件更行频率****/
+typedef enum FileUpdateRate{
+    fileNeverUpdate ,   //从不跟新
+    fileOnceUpdate ,    //跟新一次
+    fileEveryUpdate ,   //每次跟新
+    fileEveryDayUpdate, //文件每天启动的时候更新
+    fileOnedayUpdate,   //每天跟新一次
+    fileThreedayUpdate ,//3天跟新一次
+    fileWeekUpdate ,    //一星期跟新一次
+    fileMonthUpdate ,   //一月跟新一次
+}FileUpdateRate;
+
+@interface EFBaseCache : NSObject
+
+@property (nonatomic,assign)NSInteger tag ;
+/**
+ *  保存文件的文件夹名称
+ */
+@property (nonatomic,strong)NSString *folderName ;
+
+/**
+ *  文件名称
+ */
+@property (nonatomic,strong)NSString *fileName ;
+
+/**
+ *  文件路径
+ */
+@property (nonatomic,strong)NSString *filePath ;
+
+/**
+ *  更新频率
+ */
+@property (nonatomic,assign)FileUpdateRate fileUpdateRate;
+
+/**
+ *  更新文件的URL
+ */
+@property (nonatomic,strong)NSString *fileURL ;
+
+/**
+ *  文件是否需要加密
+ */
+@property (nonatomic,assign)BOOL fileNameNeedMD5Flag ;
+
+
+/************文件相关操作方法********************/
+
+// 生成文件夹全路径
+- (NSString *)generateFolderPath ;
+// 创建文件夹
+- (void)createFolder;
+// 生成文件全路径
+- (NSString *)generateFilePath:(NSString *)fileName;
+// 判断文件是否存在
+- (BOOL)fileExistsAtPath:(NSString *)path;
+// 创建文件
+- (BOOL)createFileByName:(NSString *)fileName fileData:(NSData *)data;
+// 删除文件
+- (void)deleteFileByName:(NSString *)path;
+// 文件至今多少天
+- (NSInteger)dateEarlierNow:(NSString *)fileName;
+// MD5加密
+- (NSString *)md5HexDigest:(NSString *)fileName;
+
+/************文件更新策略方法****************/
+- (BOOL)updateFileWithRateUnit;
+
+/***************缓存处理******************/
+
+- (NSString *)getCacheSize;
+- (NSUInteger)checkTmpSize;
+- (void)cleanCache;
+
+
+/****************单独文件操作*******************/
+
+/**
+ *  清楚缓存
+ */
++ (void)aloneCacheReset;
+
+/**
+ *  保存到cache中
+ *
+ *  @param data 需要保存的数据
+ *  @param key  键值
+ */
++ (void) aloneCacheData:(NSData*)data forKey:(NSString*)key;
+/**
+ *  从cache中获取数据
+ *
+ *  @param key 键值
+ */
++ (id) aloneCacheObjectForKey:(NSString*)key;
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

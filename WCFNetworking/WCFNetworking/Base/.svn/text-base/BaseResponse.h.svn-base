@@ -1,0 +1,19 @@
+//
+//  BaseResponse.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "JSONModel.h"
+
+@interface BaseResponse : JSONModel
+
+@property (nonatomic,assign)int code ;
+@property (nonatomic,assign)BOOL success ;
+@property (nonatomic,copy)NSString *msg ;
+
++ (void)initKeyMapper;
+
+@end

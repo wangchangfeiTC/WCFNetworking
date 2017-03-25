@@ -1,0 +1,114 @@
+//
+//  EFAppContext.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFAppContext.h"
+
+#import <UICKeyChainStore.h>
+#import "UtilsMacro.h"
+
+// 登录
+static NSString *const EFAppContextNF_USER_SESSION = @"NF_USER_SESSION";
+static NSString *const EFAppContextNF_USER_INFO = @"NF_USER_INFO";
+
+static NSString *const EFAppContextHid = @"userid";
+static NSString *const EFAppContextNick = @"nick";
+static NSString *const EFAppContextHimg = @"himg";
+
+@implementation EFAppContext
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        self.NF_USER_SESSION = [UICKeyChainStore stringForKey:EFAppContextNF_USER_SESSION];
+        self.NF_USER_INFO = [UICKeyChainStore stringForKey:EFAppContextNF_USER_INFO];
+        
+        self.userid = [UICKeyChainStore stringForKey:EFAppContextHid];
+        self.nick = [UICKeyChainStore stringForKey:EFAppContextNick];
+        self.himg = [UICKeyChainStore stringForKey:EFAppContextHimg];
+    }
+    return self;
+}
+
++ (instancetype)sharedContext
+{
+    static EFAppContext *_sharedContext = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _sharedContext = [[EFAppContext alloc] init];
+    });
+    return _sharedContext;
+}
+
+- (void)save
+{
+    if (!ISEMPTY(self.NF_USER_SESSION)) {
+        [UICKeyChainStore setString:self.NF_USER_SESSION forKey:EFAppContextNF_USER_SESSION];
+    }
+    if (!ISEMPTY(self.NF_USER_INFO)) {
+        [UICKeyChainStore setString:self.NF_USER_INFO forKey:EFAppContextNF_USER_INFO];
+    }
+    
+    if (!ISEMPTY(self.userid)) {
+        [UICKeyChainStore setString:self.userid forKey:EFAppContextHid];
+    }
+    
+    if (!ISEMPTY(self.nick)) {
+        [UICKeyChainStore setString:self.nick forKey:EFAppContextNick];
+    }
+    if (!ISEMPTY(self.himg)) {
+        [UICKeyChainStore setString:self.himg forKey:EFAppContextHimg];
+    }
+  
+}
+- (void)clear
+{
+    // 删除用户UID记录
+    [UICKeyChainStore removeItemForKey:EFAppContextNF_USER_SESSION];
+    self.NF_USER_SESSION = nil;
+    [UICKeyChainStore removeItemForKey:EFAppContextNF_USER_INFO];
+    self.NF_USER_INFO = nil;
+    
+    [UICKeyChainStore removeItemForKey:EFAppContextHid];
+    self.userid = nil ;
+    [UICKeyChainStore removeItemForKey:EFAppContextNick];
+    self.nick = nil ;
+    [UICKeyChainStore removeItemForKey:EFAppContextHimg];
+    self.himg = nil ;
+    
+}
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

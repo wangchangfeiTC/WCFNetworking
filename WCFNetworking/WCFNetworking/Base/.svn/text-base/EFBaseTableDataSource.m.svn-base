@@ -1,0 +1,112 @@
+//
+//  EFBaseTableDataSource.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFBaseTableDataSource.h"
+
+@implementation EFBaseTableDataSource
+- (instancetype)initWithController:(EFBaseViewController *)controller
+{
+    if (self = [super init]) {
+        self.controller = controller ;
+        _pageSize = 10 ;
+    }
+    return self ;
+}
+
+- (void)addDataArray:(NSArray *)array
+{
+    if (nil == self.dataArray) {
+        self.dataArray = [NSMutableArray arrayWithArray:array];
+    }else{
+        [self.dataArray addObjectsFromArray:array];
+    }
+}
+- (void)insertObject:(id)aObject atIndex:(NSUInteger)index
+{
+    if (nil == self.dataArray) {
+        self.dataArray  = [NSMutableArray arrayWithObject:aObject];
+    }else{
+        [self.dataArray insertObject:aObject atIndex:index];
+    }
+}
+- (void)clearData
+{
+    if (_dataArray) {
+        [_dataArray removeAllObjects];
+    }
+}
+- (void)removeObjectAtIndex:(NSUInteger)index
+{
+    if (_dataArray) {
+        [_dataArray removeObjectAtIndex:index];
+    }
+}
+- (int)count
+{
+    return (int)_dataArray.count ;
+}
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+   return _dataArray.count ;
+}
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1 ;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellID = @"cellID";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellID];
+    if (nil == cell) {
+        cell =[[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellID] ;
+    }
+    cell.textLabel.text = @"恩福健康!";
+    
+    return cell;
+}
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

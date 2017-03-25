@@ -1,0 +1,40 @@
+//
+//  EFAppContext.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface EFAppContext : NSObject
+
+@property (nonatomic,strong)NSString *NF_USER_INFO ;
+@property (nonatomic,strong)NSString *NF_USER_SESSION ;
+
+@property (nonatomic, strong) NSString *userid;
+@property (nonatomic, strong) NSString *nick;
+@property (nonatomic, strong) NSString *himg;
+
+
++ (instancetype)sharedContext;
+
+- (void)save;
+- (void)clear;
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+

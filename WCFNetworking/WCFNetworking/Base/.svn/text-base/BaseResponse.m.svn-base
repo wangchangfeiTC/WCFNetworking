@@ -1,0 +1,19 @@
+//
+//  BaseResponse.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "BaseResponse.h"
+
+@implementation BaseResponse
++ (void)initKeyMapper
+{
+    [JSONModel setGlobalKeyMapper:[ [JSONKeyMapper alloc] initWithDictionary:@{@"id":@"eid",
+                    @"description":@"descrip"
+                    }]
+     ];
+}
+@end

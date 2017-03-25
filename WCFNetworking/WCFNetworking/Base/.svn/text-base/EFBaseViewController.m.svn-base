@@ -1,0 +1,392 @@
+//
+//  EFBaseViewController.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFBaseViewController.h"
+
+#import "LoginViewController.h"
+
+#import "iToast.h"
+#import <MBProgressHUD.h>
+
+
+@interface EFBaseViewController ()<MBProgressHUDDelegate>
+{
+    MBProgressHUD *_hud ;
+}
+@end
+
+@implementation EFBaseViewController
+
+- (void)dealloc
+{
+    [self removeNotification];
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self initNavbar];
+    [self initModel];
+    [self initNibDefault];
+    [self initView];
+    [self addNotification];
+
+}
+
+- (void)initNavbar
+{
+    self.extendedLayoutIncludesOpaqueBars = YES ;
+    self.edgesForExtendedLayout = UIRectEdgeBottom ;
+    self.modalPresentationCapturesStatusBarAppearance = YES ;
+    self.view.backgroundColor = kColorDefultBg ;
+    self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
+    
+    if (self.navigationController.viewControllers.count > 1 ) {
+        
+        UIButton *back = [UIButton buttonWithType:UIButtonTypeCustom];
+        [back setFrame:CGRectMake(0, 0, 13, 23)];
+        [back setImage:kImage(@"return") forState:UIControlStateNormal];
+        [back addTarget:self action:@selector(returnVC) forControlEvents:UIControlEventTouchUpInside];
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:back];
+    }
+}
+- (void)initModel
+{
+
+}
+- (void)initView
+{
+
+}
+
+- (void)initNibDefault
+{
+
+}
+- (void)addNotification
+{
+
+}
+- (void)removeNotification
+{
+
+}
+
+
+- (void)handleModelError:(id)sender error:(NSError *)error
+{
+    [self hideHUD];
+    if (2 == error.code) {
+        [self showAlert:@"用户验证失败，请重新登陆" timeSpan:EFAlertShowTime];
+    } else {
+        if (ISEqual(error.domain, @"NSURLErrorDomain")) {//网络超时
+            [self showAlert:@"网络超时，请稍后再试" timeSpan:EFAlertShowTime];
+            return ;
+        }
+        if (ISEqual(error.domain, @"JSONModelErrorDomain")) {//字段解析错误
+            [self showAlert:@"解析出错" timeSpan:EFAlertShowTime];
+            return ;
+        }
+        if (ISEqual(error.domain, @"NSCocoaErrorDomain")) {//网络错误 404 500 502
+            [self showAlert:@"网络超时，请稍后再试" timeSpan:EFAlertShowTime];
+            return ;
+        }
+        [self showAlert:error.domain timeSpan:EFAlertShowTime];
+    }
+}
+
+
+-(void)setTitle:(NSString *)title
+{
+    UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+    label.text = title;
+    label.font = [UIFont systemFontOfSize:18.0f];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.textColor = [UIColor whiteColor];
+    label.backgroundColor = [UIColor clearColor];
+    [label sizeToFit];
+    self.navigationItem.titleView = label;
+}
+
+- (void)setCustomerReturn:(BOOL)customerReturn
+{
+    _customerReturn = customerReturn ;
+    
+    NSUInteger count = [self.navigationController.viewControllers count];
+    
+    if(customerReturn && count>1 && nil == self.navigationItem.leftBarButtonItem){
+        UIButton *btnReturn=[[UIButton alloc]initWithFrame:CGRectMake(0, 22, 75, 40)];
+        [btnReturn setImage:kImage(@"nav_back") forState:UIControlStateNormal];
+        [btnReturn setImage:kImage(@"nav_back") forState:UIControlStateHighlighted];
+        [btnReturn addTarget:self action:@selector(returnVC) forControlEvents:UIControlEventTouchUpInside];
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:btnReturn];
+    }
+}
+- (void)setRightBarButtonWithIcon:(NSString *)icon title:(NSString *)title
+{
+    UIButton *rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    [rightBtn setTitleColor:kColorDefultCell forState:UIControlStateNormal];
+    if (!ISEMPTY(title)) {
+        [rightBtn setFrame:CGRectMake(0, 0, 60, 30)];
+        [rightBtn setTitle:title forState:UIControlStateNormal];
+    }
+    if (!ISEMPTY(icon)) {
+        [rightBtn setFrame:CGRectMake(0, 0, 25, 25)];
+        [rightBtn setImage:kImage(icon) forState:UIControlStateNormal];
+    }
+    rightBtn.titleLabel.font = kFontMidden ;
+    rightBtn.titleLabel.textAlignment = NSTextAlignmentRight ;
+    [rightBtn.titleLabel sizeToFit];
+    [rightBtn addTarget:self action:@selector(rightBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:rightBtn];
+    
+}
+-(void)rightBtnClick{}
+
+
+#pragma mark - 返回到前一页
+- (void)backWithDelay:(int)delayTime
+{
+    [self performSelector:@selector(onBackViewController:) withObject:nil afterDelay:delayTime];
+}
+- (void)onBackViewController:(id)sender
+{
+    [self returnVC];
+}
+-(void)returnVC
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+// 返回到root
+- (void)backRootVCWithDelay:(int)delayTime
+{
+    [self performSelector:@selector(returnRootVC) withObject:nil afterDelay:delayTime];
+}
+- (void)returnRootVC
+{
+    [self.navigationController popToRootViewControllerAnimated:YES];
+}
+
+- (void)dismissVC
+{
+    [self.navigationController dismissViewControllerAnimated:YES completion:NULL];
+}
+
+
+#pragma mark - 控制器退出键盘
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [self bgViewTap];
+}
+- (void)bgViewTap
+{
+    [self.view endEditing:YES];
+}
+
+#pragma mark -  HUD提示
+- (void)showHUD
+{
+    [self showHUDWithLabel:@"加载ing...^_^"];
+}
+- (void)showHUDWithLabel:(NSString *)msg
+{
+    [self hideHUD];
+    _hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    _hud.labelText = msg;
+    _hud.opacity = 0.3 ;
+    _hud.cornerRadius = 5 ;
+    //    self.hud.mode =MBProgressHUDModeDeterminate ;
+    _hud.animationType = MBProgressHUDAnimationZoom ;
+    _hud.color = kColorAlpha(34, 213, 218,0.5);
+    //    self.hud.activityIndicatorColor =kColorDefultOrange ;
+    [_hud show:YES];
+}
+- (void)hideHUD
+{
+    if (_hud) {
+        [_hud hide:YES afterDelay:0];
+        _hud = nil;
+    }
+}
+- (void)hideHUDAfterDelay:(float)delay
+{
+    if (_hud) {
+        [_hud hide:YES afterDelay:delay];
+        _hud = nil;
+    }
+}
+- (void)hudWasHidden:(MBProgressHUD *)hud
+{
+    [hud removeFromSuperview];
+}
+- (void)showHUDInView:(UIView *)view msg:(NSString *)msg
+{
+    [self hideHUD];
+    _hud = [MBProgressHUD showHUDAddedTo:view animated:YES];
+    _hud.labelText = msg;
+    _hud.opacity = 0.3 ;
+    _hud.animationType = MBProgressHUDAnimationZoom ;
+    _hud.color = kColorAlpha(34, 213, 218,0.5);
+    [_hud show:YES];
+}
+- (void)showHUDInWidownWithMsg:(NSString *)msg
+{
+    [self hideHUD];
+    _hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
+    _hud.labelText = msg;
+    _hud.opacity = 0.3 ;
+    _hud.animationType = MBProgressHUDAnimationZoom ;
+    _hud.color = kColorAlpha(34, 213, 218,0.5);
+    [_hud show:YES];
+}
+#pragma mark - 无网络，无数据 提醒
+- (void)showdataFailTipViewWithSuperView:(UIView *)superView type:(NoDataType)NoDataType target:(id)target action:(SEL)action msg:(NSString *)msg bottomInset:(CGFloat)bottomInset
+{
+    [self hidendataFailTipView];
+    
+    self.dataFailTipView = [[UIView alloc]initWithFrame:CGRectMake((superView.width-200)/2, (superView.height-200)/2-50 + bottomInset, 200,230)];
+    if (target && action) {
+        [self.dataFailTipView addTapCallBack:target sel:action];
+    }
+    
+    UIImageView *img = [[UIImageView alloc]initWithFrame:CGRectMake(50,70,100,80)];
+    if (NoDataType == NoDataTypeNoData) {//无数据
+        img.image = kImage(@"no_data") ;
+    }else if(NoDataType == NoDataTypeNoNet){//无网络
+        img.image =  kImage(@"no_net") ;
+    }
+    [self.dataFailTipView addSubview:img];
+    
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 150, 200, 30)];
+    label.textColor = kTitleColor_light ;
+    label.font = kFontMidden ;
+    label.textAlignment = NSTextAlignmentCenter ;
+    [self.dataFailTipView addSubview:label];
+    label.text = ISEMPTY(msg) ? @"网络连接失败，点击刷新！" : msg ;
+    
+    [superView addSubview:self.dataFailTipView];
+}
+
+- (void)hidendataFailTipView
+{
+    if (self.dataFailTipView) [self.dataFailTipView removeFromSuperview];
+}
+
+#pragma mark - 展示提示信息
+
+- (void)showToast:(NSString *)msg
+{
+    [[iToast makeText:msg] show];
+}
+
+- (void)showAlert:(NSString *)alert timeSpan:(int)timeSpan
+{
+    if (ISEMPTY(alert)) return ;
+    
+    if(ISEqual(alert, @"未登录")){
+        if (![(EFBaseViewController *)self.navigationController.childViewControllers.lastObject isKindOfClass:[LoginViewController class]] ) {
+            
+            LoginViewController *login = [[LoginViewController alloc]init];
+//            login.showMessage = @"您的登录已过期，为了您的数据安全，我们做了高档的加密服务，必须登录，才能访问APP里的数据！";
+            [self.navigationController pushViewController:login animated:YES];
+            return ;
+        }
+    }
+    
+    UILabel *remind = [[UILabel alloc] init];
+    remind.numberOfLines = 0;
+    remind.backgroundColor = kColorDefultOrange ;
+    remind.text = alert;
+    remind.textColor = [UIColor whiteColor];
+    remind.textAlignment = NSTextAlignmentCenter;
+    remind.font = [UIFont boldSystemFontOfSize:18];
+    remind.frame = CGRectMake(0, 0, 180, 300);
+    remind.layer.cornerRadius = 5;
+    remind.layer.masksToBounds = YES;
+    [remind sizeToFit];
+    
+    CGRect rect = remind.frame;
+    rect.size.width += 60;
+    rect.size.height += 30;
+    remind.frame = rect;
+    remind.center = CGPointMake(SCREEN_WIDTH/2.0, SCREEN_HEIGHT/2);
+    
+    [[UIApplication sharedApplication].keyWindow addSubview:remind];
+    
+    CAKeyframeAnimation *popAnimation = [CAKeyframeAnimation animationWithKeyPath:@"transform"];
+    popAnimation.duration = 0.5;
+    popAnimation.values = @[[NSValue valueWithCATransform3D:CATransform3DMakeScale(0.8f, 0.8f, 1.0f)],
+                            [NSValue valueWithCATransform3D:CATransform3DMakeScale(1.1f, 1.1f, 1.0f)],
+                            [NSValue valueWithCATransform3D:CATransform3DMakeScale(0.9f, 0.9f, 1.0f)],
+                            [NSValue valueWithCATransform3D:CATransform3DIdentity]];
+    popAnimation.keyTimes = @[@0.2f, @0.5f, @0.75f, @1.0f];
+    popAnimation.timingFunctions = @[[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
+                                     [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
+                                     [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+    [remind.layer addAnimation:popAnimation forKey:nil];
+    
+    
+    [UIView animateWithDuration:timeSpan-0.8 animations:^{
+        
+        remind.alpha = 0.8;
+    } completion:^(BOOL finished) {
+        
+        [UIView animateWithDuration:0.8 animations:^{
+            remind.alpha = 0.0;
+        } completion:^(BOOL finished){
+            [remind removeFromSuperview];
+        }];
+    }];
+    
+}
+
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return UIStatusBarStyleLightContent;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

@@ -1,0 +1,17 @@
+//
+//  EFConst.h
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+UIKIT_EXTERN const int EFTimeCount   ;   //发短信倒计时时间
+UIKIT_EXTERN const int EFBackDelayTime ; //默认返回时间
+UIKIT_EXTERN const int EFAlertShowTime ; //默认alert提示时间
+
+/*  涉及到手机号的地方全部用这个信息去显示
+ 用户的id两种情况。 手机号11位 后台默认32位 低版本的不用考虑  */
+UIKIT_EXTERN const int EFPhoneNumber ;  // 手机号位数

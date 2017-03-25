@@ -1,0 +1,118 @@
+//
+//  EFTabBarController.m
+//  EFDoctorHealth
+//
+//  Created by nf on 15/12/10.
+//  Copyright © 2015年 NF. All rights reserved.
+//
+
+#import "EFTabBarController.h"
+
+#import "PatientViewController.h"
+#import "ConsultViewController.h"
+#import "FoundViewController.h"
+#import "MeViewController.h"
+
+#import "EFNavigationController.h"
+#import "EFTabBar.h"
+
+@interface EFTabBarController ()<EFTabBarDelegate,UITabBarDelegate,UITabBarControllerDelegate>
+
+@end
+
+@implementation EFTabBarController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+   
+    [self.tabBar.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    
+    self.tabBar.alpha = 0.95 ;
+    
+    PatientViewController *patient = [[PatientViewController alloc]init];
+    EFNavigationController *patientNav = [[EFNavigationController alloc]initWithRootViewController:patient];
+    
+    ConsultViewController *consult = [[ConsultViewController alloc]init];
+    EFNavigationController *consultNav = [[EFNavigationController alloc]initWithRootViewController:consult];
+    
+    FoundViewController *found = [[FoundViewController alloc]init];
+    EFNavigationController *foundNav = [[EFNavigationController alloc]initWithRootViewController:found];
+    
+    MeViewController *me = [[MeViewController alloc]init];
+    EFNavigationController *meNav = [[EFNavigationController alloc]initWithRootViewController:me];
+    
+    self.viewControllers = @[patientNav,consultNav,foundNav,meNav];
+    self.delegate =self ;
+    
+    EFTabBar *tabbar = [[EFTabBar alloc]init];
+    tabbar.delegate = self ;
+    tabbar.frame = self.tabBar.bounds ;
+    [self.tabBar addSubview:tabbar ];
+    _groubeTabbar = tabbar ;
+    
+    NSArray *titleArray = @[@"首页",@"患者",@"发现",@"我的"];
+    NSArray *imgArray = @[@"tabbar_home",@"tabbar_article",@"tabbar_data",@"tabbar_me"];
+    
+    for (int i = 0;  i <self.viewControllers.count; i++) {
+        
+        NSString *selected = [imgArray[i] stringByAppendingString:@"_select"];
+        [tabbar addTabBarButton:imgArray[i] selIcon:selected title:titleArray[i]index:i+kTabBarBtnTag];
+    }
+}
+
+- (void)tabBar:(EFTabBar *)tabBar didSelectButtonFrom:(NSUInteger)from to:(NSUInteger)to
+{
+    self.selectedIndex = to -kTabBarBtnTag ;
+}
+
+
+- (void)showViewControllerWithTag:(int)tag
+{
+    _groubeTabbar.selectIndex = tag +kTabBarBtnTag ;
+    self.selectedIndex = tag ;
+}
+- (NSInteger)currentSelectIndex
+{
+    return _groubeTabbar.currentSelectIndex ;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
