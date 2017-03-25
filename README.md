@@ -13,7 +13,7 @@ api配置简单;
 可随时取消未完成的网络请求;
 提供请求前网络状态检测.
 
-##使用方法
+##使用方法(详见demo中HomeViewController的使用)
 
 1. 建立数据请求模型modle,继承自BaseModel
 2. 控制器ViewController继承协议BaseModelProtocol
@@ -72,8 +72,8 @@ api配置简单;
     }
 }
 
+//实例化模型
 - (HomeDataModel *)dataModel{
-
     if (nil == _dataModel) {
         //cache 缓存,下次进来可以直接读缓存数据
         _dataModel = [[HomeDataModel alloc]initWithDelegate:self cache:NO];
