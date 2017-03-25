@@ -19,7 +19,7 @@ api配置简单;
 2. 控制器ViewController继承协议BaseModelProtocol
 3. 控制器ViewController实例化model
 4. 拿着model读缓存数据,或者去请求数据
-5.获取请求数据,进行处理
+5. 获取请求数据,进行处理
 
 
 ##举例说明   
