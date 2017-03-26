@@ -59,8 +59,8 @@ api配置简单;
     
     
     //这里进行数据请求
-    
-    [self.dataModel getHomeData];
+    
+    [self.dataModel getHomeData];
     
     NSLog(@"开始请求数据...");
 }
