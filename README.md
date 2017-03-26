@@ -28,6 +28,7 @@ api配置简单;
 ---------------------------- Usage --------------------------
 
 #import "HomeViewController.h"
+
 #import "HomeDataModel.h"
 
 @interface HomeViewController ()<BaseModelProtocol>
@@ -57,7 +58,9 @@ api配置简单;
     
     
     //请求数据
+    
     [self.dataModel getHomeData];
+    
     NSLog(@"开始请求数据...");
 }
 
@@ -78,9 +81,12 @@ api配置简单;
 
 //实例化模型
 - (HomeDataModel *)dataModel{
+
     if (nil == _dataModel) {
-        //cache 缓存,下次进来可以直接读缓存数据
+    
+        //cache=YES,进行缓存,下次进来可以直接读缓存数据
         _dataModel = [[HomeDataModel alloc]initWithDelegate:self cache:NO];
+        
     }
     return _dataModel;
 }
