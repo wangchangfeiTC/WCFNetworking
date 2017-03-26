@@ -58,7 +58,6 @@ api配置简单;
     
     
     
-    
     //这里进行数据请求
     
     [self.dataModel getHomeData];
