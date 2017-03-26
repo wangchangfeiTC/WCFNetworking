@@ -31,7 +31,9 @@ api配置简单;
 #import "HomeDataModel.h"
 
 @interface HomeViewController ()<BaseModelProtocol>
+
 @property (nonatomic,strong)HomeDataModel *dataModel;
+
 @end
 
 @implementation HomeViewController
@@ -42,8 +44,10 @@ api配置简单;
     self.navigationItem.title = @"首页";
     
     //如果之前保存了缓存数据,可以加载缓存数据
+    
     [self.dataModel readCacheDataWithCallback:^(BaseResponse *response, NSError *error) {
         if (nil == error) {
+        
             //返回的数据
             HomeDataResponse *resp = (HomeDataResponse *)response;
             //这里处理数据
