@@ -58,8 +58,9 @@ api配置简单;
     
     
     
-    //请求数据
     
+    //这里进行数据请求
+    
     [self.dataModel getHomeData];
     
     NSLog(@"开始请求数据...");
@@ -86,7 +87,7 @@ api配置简单;
 
     if (nil == _dataModel) {
     
-        //cache=YES,进行缓存,下次进来可以直接读缓存数据
+         //cache=YES,进行缓存,下次进来可以直接读缓存数据
         
         _dataModel = [[HomeDataModel alloc]initWithDelegate:self cache:NO];
         
