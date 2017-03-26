@@ -57,6 +57,7 @@ api配置简单;
     }];
     
     
+    
     //请求数据
     
     [self.dataModel getHomeData];
@@ -67,6 +68,7 @@ api配置简单;
 - (void)getDataFinish:(BaseModel *)baseModel netError:(NSError *)error{
 
     NSLog(@"请求错误 %@",error);
+    
 }
 
 - (void)getDataFinish:(BaseModel *)baseModel netResponse:(BaseResponse *)response{
@@ -85,6 +87,7 @@ api配置简单;
     if (nil == _dataModel) {
     
         //cache=YES,进行缓存,下次进来可以直接读缓存数据
+        
         _dataModel = [[HomeDataModel alloc]initWithDelegate:self cache:NO];
         
     }
